@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   lint-app-microservices:
     docker:
-      - image: circleci/node:12.22.11
+      - image: circleci/node:12.22
     steps:
       - checkout
   build-docker:
