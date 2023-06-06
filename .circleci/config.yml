@@ -1,21 +1,58 @@
-# This config is equivalent to both the '.circleci/extended/orb-free.yml' and the base '.circleci/config.yml'
 version: 2.1
 
-# Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
-# See: https://circleci.com/docs/orb-intro/
-orbs:
-  node: circleci/node@4.7
+jobs:
+  lint-app-microservices:
+    docker:
+      - image: circleci/node:12.22.11
+    steps:
+      - checkout
+  build-docker:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build docker container - microservices
+          command: |
+            echo "------------------ Installing dependencies---------------------------"
+            sudo curl -LO https://nodejs.org/dist/v12.22.11/node-v12.22.11-linux-x64.tar.xz
+            sudo tar -xvf node-v12.22.11-linux-x64.tar.xz
+            sudo cp -r node-v12.22.11-linux-x64/{bin,include,lib,share} /usr/
+            node --version => v
+            sudo apt install nodejs
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/configuration-reference/#workflows
+            echo "--------- The images - Building ------------"
+            export FEED_VERSION=v1
+            export USER_VERSION=v1
+            export FRONTEND_VERSION=v1
+            export PROXY_VERSION=v1
+
+            docker build -t udagram-api-feed ./udagram-api-feed
+            docker tag udagram-api-feed thanhtt9900/udagram-api-feed:$FEED_VERSION
+
+            docker build -t udagram-api-user ./udagram-api-user
+            docker tag udagram-api-user thanhtt9900/udagram-api-user:$USER_VERSION
+            
+            docker build -t udagram-frontend ./udagram-frontend
+            docker tag udagram-frontend thanhtt9900/udagram-frontend:$FRONTEND_VERSION
+
+            docker build -t udagram-reverseproxy ./udagram-reverseproxy
+            docker tag udagram-reverseproxy thanhtt9900/reverseproxy:$PROXY_VERSION
+
+            echo "-------- All images succesfully built----------"
+
+            echo " ------- login in to hub--------"
+
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+
+            echo "-------------- Pushing images to dockerhub-------"
+            
+            docker push thanhtt9900/udagram-api-feed:$FEED_VERSION
+            docker push thanhtt9900/udagram-api-user:$USER_VERSION
+            docker push thanhtt9900/udagram-frontend:$FRONTEND_VERSION
+            docker push thanhtt9900/reverseproxy:$PROXY_VERSION
 workflows:
-  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  default:
     jobs:
-      - node/test:
-          # This is the node version to use for the `cimg/node` tag
-          # Relevant tags can be found on the CircleCI Developer Hub
-          # https://circleci.com/developer/images/image/cimg/node
-          version: '12.22.1'
-          # If you are using yarn, change the line below from "npm" to "yarn"
-          pkg-manager: npm
+      - lint-app-microservices
+      - build-docker:
+          requires: [lint-app-microservices]
