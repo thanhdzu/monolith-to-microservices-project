@@ -1,0 +1,58 @@
+version: 2.1
+
+jobs:
+  lint-app-microservices:
+    docker:
+      - image: circleci/node:12.22
+    steps:
+      - checkout
+  build-docker:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build docker container - microservices
+          command: |
+            echo "------------------ Installing dependencies---------------------------"
+            sudo curl -LO https://nodejs.org/dist/v12.22.11/node-v12.22.11-linux-x64.tar.xz
+            sudo tar -xvf node-v12.22.11-linux-x64.tar.xz
+            sudo cp -r node-v12.22.11-linux-x64/{bin,include,lib,share} /usr/
+            node --version => v
+            sudo apt install nodejs
+
+            echo "--------- The images - Building ------------"
+            export FEED_VERSION=v1
+            export USER_VERSION=v1
+            export FRONTEND_VERSION=v1
+            export PROXY_VERSION=v1
+
+            docker build -t udagram-api-feed ./udagram-api-feed
+            docker tag udagram-api-feed thanhtt9900/udagram-api-feed:$FEED_VERSION
+
+            docker build -t udagram-api-user ./udagram-api-user
+            docker tag udagram-api-user thanhtt9900/udagram-api-user:$USER_VERSION
+            
+            docker build -t udagram-frontend ./udagram-frontend
+            docker tag udagram-frontend thanhtt9900/udagram-frontend:$FRONTEND_VERSION
+
+            docker build -t udagram-reverseproxy ./udagram-reverseproxy
+            docker tag udagram-reverseproxy thanhtt9900/reverseproxy:$PROXY_VERSION
+
+            echo "-------- All images succesfully built----------"
+
+            echo " ------- login in to hub--------"
+
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+
+            echo "-------------- Pushing images to dockerhub-------"
+            
+            docker push thanhtt9900/udagram-api-feed:$FEED_VERSION
+            docker push thanhtt9900/udagram-api-user:$USER_VERSION
+            docker push thanhtt9900/udagram-frontend:$FRONTEND_VERSION
+            docker push thanhtt9900/reverseproxy:$PROXY_VERSION
+workflows:
+  default:
+    jobs:
+      - lint-app-microservices
+      - build-docker:
+          requires: [lint-app-microservices]
