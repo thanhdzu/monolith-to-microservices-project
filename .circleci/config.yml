@@ -23,7 +23,7 @@ jobs:
             echo "--------- The images - Building ------------"
             export FEED_VERSION=v1
             export USER_VERSION=v1
-            export FRONTEND_VERSION=v1
+            export FRONTEND_VERSION=v6
             export PROXY_VERSION=v1
 
             docker build -t udagram-api-feed ./udagram-api-feed
@@ -42,7 +42,7 @@ jobs:
 
             echo " ------- login in to hub--------"
 
-            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+            docker login -u thanhtt9900 -p $DOCKERHUB_PASSWORD
 
             echo "-------------- Pushing images to dockerhub-------"
             
