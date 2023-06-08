@@ -1,5 +1,8 @@
 # Udagram Image Filtering Application
 
+Git Repository: https://github.com/thanhdzu/monolith-to-microservices-project
+Public Frontend: http://a2a42f18d084d4cc8a47c0d3562397bf-1568595605.us-east-1.elb.amazonaws.com  
+
 Udagram is a simple cloud application developed alongside the Udacity Cloud Developer Nanodegree. It allows users to register and log into a web client, post photos to the feed, and process photos using an image filtering microservice.
 
 The project is split into two parts: 
